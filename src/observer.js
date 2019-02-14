@@ -1,29 +1,15 @@
-let data = {
-  name: 'strugglebak',
-  brothers: [1, 2, 3],
-  parent: {
-      dad: {
-          name: 'baba',
-          age: 100
-      },
-      mom: {
-          name: 'mama',
-          age: 90,
-          brothers: [1, 2, 3]
-      }
-  }
-};
-observe(data);
-
-// console.log(data.name);
-
-// data.name = 'valley';
-// data.brothers[0] = 4;
-// console.log(data.brothers[0]);
-
-data.parent.mom.brothers[0] = 4;
-
-function observe(data) {
+// 观察者
+function Observer(name) {
+    this.name = name;
+}
+Observer.prototype.update = function() {
+    console.log(this.name + ' 执行 update 函数');
+}
+Observer.prototype.subscribe = function(subject) {
+    subject.addObserver(this);
+    console.log(`${this.name} 订阅了 ${subject.name}`);
+}
+Observer.prototype.on = function(data) {
     if (!data || typeof data !== 'object') { return; }
     for (let key in data) {
         let value = data[key];
