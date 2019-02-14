@@ -6,48 +6,21 @@
       <title>mvvm 框架演示</title>
     </head>
     <body>
-      <div class="app">
-        <h1>{{name}}</h1>
+      <div id="app">
+        <h1>{{name}} 的年龄是 {{age}}</h1>
       </div>
       <script src="./src/observer.js" charset="utf-8"></script>
       <script src="./src/subject.js" charset="utf-8"></script>
+      <script src="./src/common.js" charset="utf-8"></script>
+      <script src="./src/mvvm.js" charset="utf-8"></script>
       <script>
-        // 一个主题可以被多个观察者订阅
-        let subject1 = new Subject('subject1');
-        let observer1 = new Observer('我是observer1');
-        let observer2 = new Observer('我是observer2');
-        let observer3 = new Observer('我是observer3');
-
-        observer1.subscribe(subject1);
-        observer2.subscribe(subject1);
-        observer3.subscribe(subject1);
-
-        // 主题发布消息通知
-        subject1.emit(); 
-
-        // 一个观察者可以订阅多个主题
-        let subject2 = new Subject('subject2');
-        let subject3 = new Subject('subject3');
-        let subject4 = new Subject('subject4');
-        let observer4 = new Observer('我是observer4');
-
-        observer4.subscribe(subject2);
-        observer4.subscribe(subject3);
-        observer4.subscribe(subject4);
-
-        // 主题发布消息通知
-        subject2.emit();
-        subject3.emit();
-        subject4.emit();
-
-      </script>
-      <script>
-        // var vm = new mvvm({
-        //   el: 'app',
-        //   data: {
-        //     name: '红领巾'
-        //   }
-        // });
+        var vm = new Mvvm({
+          el: '#app',
+          data: {
+            name: '红领巾',
+            age: 10,
+          }
+        });
       </script>
     </body>
   </html>

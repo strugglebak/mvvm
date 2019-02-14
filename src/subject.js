@@ -1,5 +1,5 @@
-// 订阅主题
-function Subject(name) {
+// 主题
+function Subject(name='') {
     this.name = name;
     this.observers = [];
 }
