@@ -1,0 +1,23 @@
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+      <title>mvvm 框架演示</title>
+    </head>
+    <body>
+      <div class="app">
+        <h1>{{name}}</h1>
+      </div>
+      <script src="./src/observe.js" charset="utf-8"></script>
+      <script src="./src/mvvm.js" charset="utf-8"></script>
+      <script>
+        var vm = new mvvm({
+          el: 'app',
+          data: {
+            name: '红领巾'
+          }
+        });
+      </script>
+    </body>
+  </html>
