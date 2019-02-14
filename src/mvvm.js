@@ -25,8 +25,19 @@ Mvvm.prototype.render2Text = function(node) {
     let regex = /{{(.+?)}}/g; // 正则，匹配 {{}} 字符串
     let match;
     while (match = regex.exec(node.nodeValue)) {
-        let key = match[1].trim();
-        let value = match[0];
+        let key = match[1].trim();  // "name"
+        let value = match[0];       // "{{name}}"
         node.nodeValue = node.nodeValue.replace(value, this.$data[key]);
+        // 当数据发生变化时，需要再次渲染模板, 将旧数据替换成新数据
+        let options = {
+            name: 'observer',
+            vm: this,
+            key: key,
+            callback: (oldValue, newValue)=> {
+                node.nodeValue = node.nodeValue.replace(oldValue, newValue);
+            },
+        }
+        // 为每个变化的数据添加 observer
+        new Observer(options);
     }
 }
