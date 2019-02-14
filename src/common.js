@@ -6,13 +6,14 @@ function on(data) {
     if (!data || typeof data !== 'object') { return; }
     for (let key in data) {
         let value = data[key];
-        let subject = new Subject();
+        let subject = new Subject('subject-' + parseInt(Math.random()*1000) + '号主题');
         Object.defineProperty(data, key, {
             enumerable: true,
             configurable: true,
             get: ()=> {
                 console.log(`get value is '${value}'`);
                 if (globleObserver) {
+                    console.log(`当前 observer 是 '${globleObserver.name}'`);
                     globleObserver.subscribe(subject);
                 }
                 return value;

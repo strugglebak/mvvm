@@ -1,5 +1,6 @@
 function Mvvm(options) {
     this.init(options);
+    this.number = parseInt(Math.random()*1000, 10);
     on(this.$data); // 监听数据变化
     this.compile();
 }
@@ -7,7 +8,6 @@ Mvvm.prototype.init = function(options) {
     let {el, data} = options;
     this.$el = document.querySelector(el);
     this.$data = data;
-    this.observers = [];
 }
 Mvvm.prototype.compile = function() {
     this.parse(this.$el); // 解析元素中出现的 {{ }}
@@ -29,8 +29,12 @@ Mvvm.prototype.render2Text = function(node) {
         let value = match[0];       // "{{name}}"
         node.nodeValue = node.nodeValue.replace(value, this.$data[key]);
         // 当数据发生变化时，需要再次渲染模板, 将旧数据替换成新数据
+        let number = parseInt(Math.random()*1000, 10);
+        while(this.number === number) {
+            number = parseInt(Math.random()*1000, 10);
+        }
         let options = {
-            name: 'observer',
+            name: 'observer-'+ number + '号',
             vm: this,
             key: key,
             callback: (oldValue, newValue)=> {

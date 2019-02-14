@@ -8,7 +8,7 @@ function Observer(options) {
     this.callback = callback;
 }
 Observer.prototype.update = function() {
-    console.log(this.name + ' 执行 update 函数');
+    console.log(`'${this.name}' 执行 update 函数`);
     let oldValue = this.oldValue;
     let newValue = this.getValue();
     if (oldValue !== newValue) { // 如果数据变化了
@@ -26,5 +26,5 @@ Observer.prototype.getValue = function() {
 }
 Observer.prototype.subscribe = function(subject) {
     subject.addObserver(this);
-    console.log(`${this.name} 订阅了 ${subject.name}`);
+    console.log(`'${this.name}' 订阅了 '${subject.name}'`);
 }
