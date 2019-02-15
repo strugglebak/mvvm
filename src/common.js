@@ -31,3 +31,20 @@ function on(data) {
         }
     }
 }
+
+function onInnerData(vm) {
+    let data = vm.$data;
+    if (!data || typeof data !== 'object') { return; }
+    for (let key in data) {
+        Object.defineProperty(vm, key, {
+            enumerable: true,
+            configurable: true,
+            get: ()=> {
+                return data[key];
+            },
+            set: (newValue)=> {
+                data[key] = newValue;
+            }
+        });
+    }
+}
