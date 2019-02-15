@@ -13,6 +13,7 @@
       <script src="./src/observer.js" charset="utf-8"></script>
       <script src="./src/subject.js" charset="utf-8"></script>
       <script src="./src/common.js" charset="utf-8"></script>
+      <script src="./src/compiler.js" charset="utf-8"></script>
       <script src="./src/mvvm.js" charset="utf-8"></script>
       <script>
         var vm = new Mvvm({
@@ -20,8 +21,15 @@
           data: {
             name: '红领巾',
             age: 10,
-          }
+          },
+          methods: {
+            talk() {
+              alert('hello world');
+            }
+          },
         });
+        console.log(vm.name, vm.age);
+        vm.talk();
       </script>
     </body>
   </html>

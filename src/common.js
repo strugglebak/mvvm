@@ -33,17 +33,28 @@ function on(data) {
 }
 
 function onInnerData(vm) {
+    // 遍历 data 属性
     let data = vm.$data;
     if (!data || typeof data !== 'object') { return; }
     for (let key in data) {
         Object.defineProperty(vm, key, {
             enumerable: true,
             configurable: true,
-            get: ()=> {
-                return data[key];
-            },
+            get: ()=> { return data[key]; },
+            set: (newValue)=> { data[key] = newValue; }
+        });
+    }
+
+    // 遍历 methods 属性
+    let methods = vm.$methods;
+    if (!methods || typeof methods !== 'object') { return; }
+    for (let key in methods) {
+        Object.defineProperty(vm, key, {
+            enumerable: true,
+            configurable: true,
+            get: ()=> { return methods[key].bind(vm); },
             set: (newValue)=> {
-                data[key] = newValue;
+                console.log('set methods...');
             }
         });
     }
