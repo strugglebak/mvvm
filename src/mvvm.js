@@ -37,20 +37,13 @@ Mvvm.prototype.parseNodeAttribute = function(node) {
             node.value = this.$data[bindKey];
 
             // 当对应的 data 项的数据再次发生变化时，需要再次渲染模板, 将旧数据替换成新数据
-            let number = parseInt(Math.random()*1000, 10);
-            while(this.number === number) {
-                number = parseInt(Math.random()*1000, 10);
-            }
-            let options = {
-                name: 'observer-'+ number + '号',
+            this.listenDataChange({
                 vm: this,
                 key: bindKey,
                 callback: (newValue)=> {
                     node.value = newValue;
-                },
-            }
-            // 为每个变化的数据添加 observer
-            new Observer(options);
+                }
+            });
             /* --- 双向绑定区域 --- */
         }
     });
@@ -65,20 +58,25 @@ Mvvm.prototype.render2Text = function(node) {
         let key = match[1].trim();  // "name"
         let value = match[0];       // "{{name}}"
         node.nodeValue = node.nodeValue.replace(value, this.$data[key]);
+
         // 当对应的 data 项的数据再次发生变化时，需要再次渲染模板, 将旧数据替换成新数据
-        let number = parseInt(Math.random()*1000, 10);
-        while(this.number === number) {
-            number = parseInt(Math.random()*1000, 10);
-        }
-        let options = {
-            name: 'observer-'+ number + '号',
+        this.listenDataChange({
             vm: this,
             key: key,
             callback: (newValue, oldValue)=> {
                 node.nodeValue = node.nodeValue.replace(oldValue, newValue);
             },
-        }
-        // 为每个变化的数据添加 observer
-        new Observer(options);
+        });
     }
+}
+Mvvm.prototype.listenDataChange = function(options) {
+    let number = parseInt(Math.random()*1000, 10);
+    while(this.number === number) {
+        number = parseInt(Math.random()*1000, 10);
+    }
+    let name = 'observer-'+ number + '号';
+    let optionsCopy = options;
+    optionsCopy.name = name;
+    // 为每个变化的数据添加 observer
+    new Observer(optionsCopy);
 }
