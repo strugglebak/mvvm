@@ -21,28 +21,9 @@ Compiler.prototype.parseNodeAttribute = function(node) {
     attributes.forEach(attribute=> {
         let directive = attribute.name; // "v-model"
         if (this.isModelDirective(directive)) {
-            let bindKey = attribute.value; // "name"
-            /* --- 双向绑定区域 --- */
-            // 当 input 值发生变化时，对应的 data 项的值也发生变化
-            node.oninput = (e)=> {
-                this.vm.$data[bindKey] = e.target.value;
-            }
-            // 当对应的 data 项的值发生变化时， input 的值也发生变化
-            node.value = this.vm.$data[bindKey];
-
-            // 当对应的 data 项的数据再次发生变化时，需要再次渲染模板, 将旧数据替换成新数据
-            this.listenDataChange({
-                vm: this.vm,
-                key: bindKey,
-                callback: (newValue)=> {
-                    node.value = newValue;
-                }
-            });
-            /* --- 双向绑定区域 --- */
-        } else if (this.isEventDirective(directive)) {
-            let eventType = directive.substr(5); // "click"
-            let methodsName = attribute.value;   // "clikcMe"
-            node.addEventListener(eventType, this.vm.$methods[methodsName]);
+            this.bindModel(attribute, node);
+        } else if (this.isEventDirective(directive)) { // "v-on"
+            this.bindEventHandle(directive, attribute, node);
         }
     });
 }
@@ -51,6 +32,31 @@ Compiler.prototype.isModelDirective = function(directive) {
 }
 Compiler.prototype.isEventDirective = function(directive) {
     return directive.indexOf('v-on') === 0;
+}
+Compiler.prototype.bindModel = function(attribute, node) {
+    let bindKey = attribute.value; // "name"
+    /* --- 双向绑定区域 --- */
+    // 当 input 值发生变化时，对应的 data 项的值也发生变化
+    node.oninput = (e) => {
+        this.vm.$data[bindKey] = e.target.value;
+    }
+    // 当对应的 data 项的值发生变化时， input 的值也发生变化
+    node.value = this.vm.$data[bindKey];
+
+    // 当对应的 data 项的数据再次发生变化时，需要再次渲染模板, 将旧数据替换成新数据
+    this.listenDataChange({
+        vm: this.vm,
+        key: bindKey,
+        callback: (newValue) => {
+            node.value = newValue;
+        }
+    });
+    /* --- 双向绑定区域 --- */
+}
+Compiler.prototype.bindEventHandle = function(directive, attribute, node) {
+    let eventType = directive.substr(5); // "click"
+    let methodsName = attribute.value;   // "clikcMe"
+    node.addEventListener(eventType, this.vm.$methods[methodsName]);
 }
 Compiler.prototype.render2Text = function(node) {
     let regex = /{{(.+?)}}/g; // 正则，匹配 {{}} 字符串
