@@ -14,14 +14,19 @@
       }
     </style>
     <body>
+      <h1>这是一个 MVVM 框架示例</h1>
       <div id="app">
         <div class="wrapper">
-          <h1>姓名: {{name}}</h1>
+          <h2>{{name}}</h2>
           <label for="">
             设置姓名
             <input v-model="name" type="text">
           </label>
-          <h1>年龄: {{age}}</h1>
+          <h2>{{age}}</h2>
+          <label for="">
+            设置年龄
+            <input v-model="age" type="text">
+          </label>
           <div class="button">
             <button v-on:click="addLife">点我+1s</button>
             <button v-on:click="removeLife">点我-1s</button>
