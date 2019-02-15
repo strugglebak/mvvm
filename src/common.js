@@ -1,6 +1,7 @@
 // 公共函数
 // 监听 data 是否被 get 或 set
 var globleObserver = null;
+var subjectId = 0;
 
 function on(data) {
     if (!data || typeof data !== 'object') { return; }

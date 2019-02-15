@@ -1,6 +1,7 @@
 // 观察者
 function Observer(options) {
     let {name, vm, key, callback} = options;
+    this.subjects = {};
     this.name = name;
     this.vm = vm;
     this.key = key;
@@ -25,6 +26,9 @@ Observer.prototype.getValue = function() {
     return value;
 }
 Observer.prototype.subscribe = function(subject) {
-    subject.addObserver(this);
-    console.log(`'${this.name}' 订阅了 '${subject.name}'`);
+    if (!this.subjects[subject.id]) {
+        subject.addObserver(this);
+        this.subjects[subject.id] = subject;
+        console.log(`'${this.name}' 订阅了 '${subject.name}'`);
+    }
 }

@@ -1,6 +1,7 @@
 // 主题
 function Subject(name='') {
     this.name = name;
+    this.id = subjectId++;
     this.observers = [];
 }
 Subject.prototype.addObserver = function(observer) {
