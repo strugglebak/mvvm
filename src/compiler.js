@@ -56,7 +56,7 @@ Compiler.prototype.bindModel = function(attribute, node) {
 Compiler.prototype.bindEventHandle = function(directive, attribute, node) {
     let eventType = directive.substr(5); // "click"
     let methodsName = attribute.value;   // "clikcMe"
-    node.addEventListener(eventType, this.vm.$methods[methodsName]);
+    node.addEventListener(eventType, this.vm.$methods[methodsName].bind(this.vm));
 }
 Compiler.prototype.render2Text = function(node) {
     let regex = /{{(.+?)}}/g; // 正则，匹配 {{}} 字符串
