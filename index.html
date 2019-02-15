@@ -9,6 +9,7 @@
       <div id="app">
         <h1>{{name}} 的年龄是 {{age}}</h1>
         <input v-model="name" type="text">
+        <button v-on:click="clickMe">点我</button>
       </div>
       <script src="./src/observer.js" charset="utf-8"></script>
       <script src="./src/subject.js" charset="utf-8"></script>
@@ -25,6 +26,9 @@
           methods: {
             talk() {
               alert('hello world');
+            },
+            clickMe() {
+              alert('你点击了 button');
             }
           },
         });

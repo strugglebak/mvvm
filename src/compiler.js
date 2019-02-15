@@ -20,7 +20,7 @@ Compiler.prototype.parseNodeAttribute = function(node) {
     let attributes = [...node.attributes];
     attributes.forEach(attribute=> {
         let directive = attribute.name; // "v-model"
-        if (this.isDirective(directive)) {
+        if (this.isModelDirective(directive)) {
             let bindKey = attribute.value; // "name"
             /* --- 双向绑定区域 --- */
             // 当 input 值发生变化时，对应的 data 项的值也发生变化
@@ -39,11 +39,18 @@ Compiler.prototype.parseNodeAttribute = function(node) {
                 }
             });
             /* --- 双向绑定区域 --- */
+        } else if (this.isEventDirective(directive)) {
+            let eventType = directive.substr(5); // "click"
+            let methodsName = attribute.value;   // "clikcMe"
+            node.addEventListener(eventType, this.vm.$methods[methodsName]);
         }
     });
 }
-Compiler.prototype.isDirective = function(directive) {
+Compiler.prototype.isModelDirective = function(directive) {
     return ['v-model'].includes(directive);
+}
+Compiler.prototype.isEventDirective = function(directive) {
+    return directive.indexOf('v-on') === 0;
 }
 Compiler.prototype.render2Text = function(node) {
     let regex = /{{(.+?)}}/g; // 正则，匹配 {{}} 字符串
