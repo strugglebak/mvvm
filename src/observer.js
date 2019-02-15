@@ -14,7 +14,7 @@ Observer.prototype.update = function() {
     let newValue = this.getValue();
     if (oldValue !== newValue) { // 如果数据变化了
         this.oldValue = newValue; // 更新 observer 里面保存的 oldValue
-        this.callback.call(this, oldValue, newValue); // 调用回调更新模板数据
+        this.callback.call(this, newValue, oldValue); // 调用回调更新模板数据
     }
 }
 Observer.prototype.getValue = function() {
