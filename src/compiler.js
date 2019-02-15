@@ -2,7 +2,6 @@ function Compiler(vm) {
     this.number = parseInt(Math.random()*1000, 10);
     this.vm = vm;
     this.node = this.vm.$el;
-    this.compile();
 }
 Compiler.prototype.compile = function() {
     this.parse(this.node); // 解析元素中出现的 {{ }}

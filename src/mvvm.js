@@ -1,7 +1,7 @@
 function Mvvm(options) {
     this.init(options);
     on(this.$data); // 监听数据变化
-    new Compiler(this);
+    new Compiler(this).compile();
 }
 Mvvm.prototype.init = function(options) {
     let {el, data} = options;
