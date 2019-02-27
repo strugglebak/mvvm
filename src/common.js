@@ -27,7 +27,7 @@ function on(data) {
             }
         });
         if (typeof value === 'object') {
-            observe(value);
+            on(value);
         }
     }
 }
