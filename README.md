@@ -450,7 +450,7 @@ function onInnerData(vm) {
 1. MVVM 是一种设计模式,用于分离 data 和 ui
 2. Model 就是 data,一般用来 save data
 3. View 是对 data 进行处理,比如渲染,比如格式化
-4. ViewModel 就是个"保姆", Model 变了通知 View, View 变了通知 Model
+4. ViewModel 就是个"保姆", Model 变了通知 View, View 变了通知 Model, 所有的行为逻辑都在 ViewModel 中
 
 ## 参考链接
 [为何放弃MVC使用MVVM](https://www.jianshu.com/p/5bfdc5ba839a)
