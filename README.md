@@ -185,7 +185,7 @@ subject.emit() // 主题更新
 
 ## 单向绑定
 有了以上的知识点,我们现在就可以实现一个简单的单向数据流的框架了.那么什么是单向数据流,就是说我们修改这个 model 的 `name` 属性时,模板相应的会发生变化
-所以我们就需要一个 `Mvvm` 的类
+所以我们就需要一个 `Mvvm` 的对象
 ```
 function Mvvm(options) {
     this.init(options);
