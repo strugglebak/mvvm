@@ -324,7 +324,7 @@ function Observer(options) {
 这样就好了,我在一开始 new Observer 对象时就会去保存一个旧值,调用了 `getValue` 函数,在这个函数中,先将自己的权限设置成最高,然后通过赋值操作触发 `getter`,由于此时 `globelObserver` 不为 null 了, 在 `getter` 中当前 Observer 就订阅了主题,此时再将这个 globelObserver 置 null 将权限下放,为下个 new Observer 做准备,完美解决以上问题!
 
 ## 双向绑定
-上面的是实现了单向的绑定,可是一个 MVVM 是要双向的阿,那么怎么实现呢?这里我们就要学习 Vue 的方法了,也许你已经猜到了,对,就是**指令**,我们先定义一个 `v-model` 指令吧, 'v-model="name"' 就表示绑定的是一个变量,这个变量的名字就是 name
+上面的是实现了单向的绑定,可是一个 MVVM 是要双向的阿,那么怎么实现呢?这里我们就要学习 Vue 的方法了,也许你已经猜到了,对,就是**指令**,我们先定义一个 `v-model` 指令吧, `v-model="name"` 就表示绑定的是一个变量,这个变量的名字就是 name
 
 我们需要修改 Compiler 的 parse 函数
 ```
