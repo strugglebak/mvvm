@@ -198,7 +198,7 @@ Mvvm.prototype.init = function(options) {
     this.$data = data || {};
 }
 ```
-还是按照我们之前的思路来的,不是嘛,接下来就要实现解析模板的类了,它大概有如下几种方法
+还是按照我们之前的思路来的不是嘛,接下来就要实现解析模板的对象了,它大概有如下几种方法
 ```
 function Compiler(vm) {
     this.vm = vm;
@@ -208,7 +208,7 @@ Compiler.prototype.compile = function() {
     this.parse(this.node); // 解析元素中出现的 {{ }}
 }
 ```
-先从简单的开始吧,首先它拿到一个 vm, 然后开始解析,恩,这挺好理解,我们再尝试者解决一下 `parse` 这个函数
+先从简单的开始吧,首先它拿到一个 vm, 然后开始解析,这挺好理解,我们再尝试者解决一下 `parse` 这个函数
 ```
 Compiler.prototype.parse = function(node) {
     if (node.nodeType === Node.ELEMENT_NODE) { // 这个 node 是个元素节点
