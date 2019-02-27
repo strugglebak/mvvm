@@ -124,7 +124,7 @@ let data = {
     name: 'strugglebak'
 }
 console.log(data.name) // get value is 'strugglebak'
-data.name = 'kabelggurts' // change value from 'strugglebak' to '${kabelggurts}'
+data.name = 'kabelggurts' // change value from 'strugglebak' to 'kabelggurts'
 ```
 我打印这个属性就是在调用 `get` 方法,我赋值这个属性就是在调用 `set` 方法,我只要在这两个方法之间做一些逻辑的操作,就实现了数据劫持
 
