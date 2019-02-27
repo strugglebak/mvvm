@@ -1,3 +1,7 @@
+<div align="center">
+    <img src="https://i.loli.net/2019/02/28/5c76cc109564e.png" width=600>
+</div>
+
 # mvvm
 
 这是一个理解 `Vue` 框架思想的项目,简单易懂,可快速理解源码并上手
@@ -103,9 +107,341 @@ function on(data) {
             }
         });
         if (typeof value === 'object') {
-            observe(value);
+            on(value); // 递归
         }
     }
 }
 ```
+提示一下上面的 `let value` 为何不能用 `var value`,用了 `var` 之后 `value` 变量会提升到整个作用域范围,它里面就保存着一个变量的地址,等下个变量变化了它就存放的是下个变量的地址,所以当程序结束时它存放的就是最后一个变量的地址,这样就出 bug 了.然后数据怎么劫持的?
+```
+let data = {
+    name: 'strugglebak'
+}
+console.log(data.name) // get value is 'strugglebak'
+data.name = 'kabelggurts' // change value from 'strugglebak' to '${kabelggurts}'
+```
+我打印这个属性就是在调用 `get` 方法,我赋值这个属性就是在调用 `set` 方法,我只要在这两个方法之间做一些逻辑的操作,就实现了数据劫持
 
+## 观察者模式
+接下来我们将实现一个最简单的观察者
+```
+// 观察者
+function Observer(options) {
+    let {name} = options;
+    this.subjects = {};
+    this.name = name;
+}
+Observer.prototype.update = function() {
+    console.log(`'${this.name}' 执行 update 函数`);
+}
+Observer.prototype.subscribe = function(subject) {
+    this.subjects[subject.id] = subject;
+    console.log(`'${this.name}' 订阅了 '${subject.name}'`);
+}
+```
+这个观察者有两个函数,一个是更新 `update`,一个是订阅 `subscribe`
+
+然后我们再实现一个主题
+```
+// 主题
+function Subject(name='') {
+    this.name = name;
+    this.observers = [];
+}
+Subject.prototype.addObserver = function(observer) {
+    this.observers.push(observer);
+}
+Subject.prototype.removeObserver = function(observer) {
+    let index = this.observers.indexOf(observer);
+    if (index >= 0) {
+        this.observers.splice(index, 1);
+    }
+}
+Subject.prototype.emit = function() {
+    console.log('Subject 通知所有 Observer 执行 update 函数');
+    this.observers.forEach(observer => {
+        observer.update();
+    });
+}
+```
+这个主题有 3 个函数,它能够添加和删除观察者,当其中最重要的是,它能够通知 (`emit`) 其他所有的观察者执行它自己的 `update` 函数,所以这个主题里面必须要维护一个观察者的数组
+
+使用如下
+```
+let subject = new Subject('subject')
+let observer = new Observer('observer')
+observer.update = function() {
+  console.log('observer update')
+}
+observer.subscribe(subject)  //观察者订阅主题
+subject.emit() // 主题更新
+```
+
+## 单向绑定
+有了以上的知识点,我们现在就可以实现一个简单的单向数据流的框架了.那么什么是单向数据流,就是说我们修改这个 model 的 `name` 属性时,模板相应的会发生变化
+所以我们就需要一个 `Mvvm` 的类
+```
+function Mvvm(options) {
+    this.init(options);
+    on(this.$data); // 监听数据变化
+    new Compiler(this).compile(); // 编译模板
+}
+Mvvm.prototype.init = function(options) {
+    let {el, data} = options;
+    this.$el = document.querySelector(el);
+    this.$data = data || {};
+}
+```
+还是按照我们之前的思路来的,不是嘛,接下来就要实现解析模板的类了,它大概有如下几种方法
+```
+function Compiler(vm) {
+    this.vm = vm;
+    this.node = this.vm.$el;
+}
+Compiler.prototype.compile = function() {
+    this.parse(this.node); // 解析元素中出现的 {{ }}
+}
+```
+先从简单的开始吧,首先它拿到一个 vm, 然后开始解析,恩,这挺好理解,我们再尝试者解决一下 `parse` 这个函数
+```
+Compiler.prototype.parse = function(node) {
+    if (node.nodeType === Node.ELEMENT_NODE) { // 这个 node 是个元素节点
+        node.childNodes.forEach(childNode => {
+            this.parse(childNode); // 递归解析
+        });
+    } else if (node.nodeType === Node.TEXT_NODE) { // 这个 node 是个文本
+        this.render2Text(node); // 将 node 渲染成文本
+    }
+}
+```
+以上的代码也挺好理解(这里只做一些简单的判断避免代码变得复杂),我们的目的是要找出那个文本节点,因为我们知道 DOM 是个树结构,那么自然而然我们这里可以想到递归来寻找,无非就是没有找到就递归,找到了就渲染,好,现在看看它是怎么渲染这个文本节点的
+```
+Compiler.prototype.render2Text = function(node) {
+    let regex = /{{(.+?)}}/g; // 正则，匹配 {{}} 字符串
+    let match;
+    while (match = regex.exec(node.nodeValue)) {
+        let key = match[1].trim();  // "name"
+        let value = match[0];       // "{{name}}"
+        node.nodeValue = node.nodeValue.replace(value, this.vm.$data[key]);
+    }
+}
+```
+用正则将 text 文本中的 `{{name}}` 替换成 `data` 中的属性 `name` 对应的值,这样一来,基本上一刷新就能渲染上去
+
+但是这样还不够,因为下次数据变化了就没有刷新了,所以我们需要在这个函数里面再添加一个监听函数
+```
+...
+node.nodeValue = node.nodeValue.replace(value, this.vm.$data[key]);
+
+// 当对应的 data 项的数据再次发生变化时，需要再次渲染模板, 将旧数据替换成新数据
+this.listenDataChange({
+    vm: this.vm,
+    key: key,
+    callback: (newValue, oldValue)=> {
+        node.nodeValue = node.nodeValue.replace(oldValue, newValue); // 传一个回调,将旧数据替换成新数据
+    },
+});
+...
+```
+这个监听函数是这样实现的
+```
+Compiler.prototype.listenDataChange = function(options) {
+    // 为每个变化的数据添加 observer
+    new Observer(options);
+}
+```
+由于传了回调,我们就要修改 Observer 观察者了
+```
+function Observer(options) {
+    let {name, vm, key, callback} = options;
+    this.subjects = {};
+    this.name = name;
+    this.vm = vm;
+    this.key = key;
+    this.oldValue = this.getValue();
+    this.callback = callback;
+}
+Observer.prototype.update = function() {
+    console.log(`'${this.name}' 执行 update 函数`);
+    let oldValue = this.oldValue;
+    let newValue = this.getValue();
+    if (oldValue !== newValue) { // 如果数据变化了
+        this.oldValue = newValue; // 更新 observer 里面保存的 oldValue
+        this.callback.call(this, newValue, oldValue); // 调用回调更新模板数据
+    }
+}
+```
+这个时候问题就来了,现在我们为每个可能变化的数据都绑定了一个观察者,现在我们唯一没有做的事情就是这么多观察者,什么时候该订阅主题呢?我们知道是需要在 `on` 这个监听数据变化的函数里面订阅,可是问题来了,谁来订阅?难道你需要每个观察者都过来订阅嘛?显然不是,因为这样就有一堆观察者绑定了一堆主题,请注意我们这里的**一对多关系**,只有变化的主题(`this.data.name`)我们才去订阅它.我们这个时候想到,要是哪个数据有变化,这个时候绑定这个数据的观察者就站出来,也就是说目前**绑定的这个观察者的优先级最高**,它能优先更新这个数据就好了,那么怎么做呢?
+
+于是我们想到可不可以用一个全局的 `globleObserver` 来做呢?首先我们假定这个全局的,优先级最高的观察者为 null, 当它不为 null 时,就可以订阅了,那么在哪里订阅?当然是在 `get` 函数中
+```
+var globleObserver = null;
+function on(data) {
+    ...
+    get: ()=> {
+        if (globleObserver) {
+            globleObserver.subscribe(subject); // 订阅
+        }
+        return value;
+    }
+    ...
+}
+```
+然后在观察者里添加个 `getValue` 函数
+```
+Observer.prototype.getValue = function() {
+    globleObserver = this; // 下面的语句在执行时会触发 getter, 
+                           // 在 getter return 之前将监听数据的 observer 添加进 subject 数据里面
+    let value = this.vm.$data[this.key]; // 触发 getter
+    globleObserver = null;  // 将 globleObserver 置 null, 为下个 observer 做准备
+                            // 此时 subject 里面已经有了该 observer
+    return value;
+}
+```
+最后修改一下 Observer 对象
+```
+function Observer(options) {
+    let {name, vm, key, callback} = options;
+    this.subjects = {};
+    this.name = name;
+    this.vm = vm;
+    this.key = key;
+    this.oldValue = this.getValue();
+    this.callback = callback;
+}
+```
+这样就好了,我在一开始 new Observer 对象时就会去保存一个旧值,调用了 `getValue` 函数,在这个函数中,先将自己的权限设置成最高,然后通过赋值操作触发 `getter`,由于此时 `globelObserver` 不为 null 了, 在 `getter` 中当前 Observer 就订阅了主题,此时再将这个 globelObserver 置 null 将权限下放,为下个 new Observer 做准备,完美解决以上问题!
+
+## 双向绑定
+上面的是实现了单向的绑定,可是一个 MVVM 是要双向的阿,那么怎么实现呢?这里我们就要学习 Vue 的方法了,也许你已经猜到了,对,就是**指令**,我们先定义一个 `v-model` 指令吧, 'v-model="name"' 就表示绑定的是一个变量,这个变量的名字就是 name
+
+我们需要修改 Compiler 的 parse 函数
+```
+Compiler.prototype.parse = function(node) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+        this.parseNodeAttribute(node); // 解析指令,属性
+        node.childNodes.forEach(childNode => {
+            this.parse(childNode);
+        });
+    } else if (node.nodeType === Node.TEXT_NODE) {
+        this.render2Text(node);
+    }
+}
+```
+多了个 `parseNodeAttribute`,我们看看它实现了什么
+```
+Compiler.prototype.parseNodeAttribute = function(node) {
+    let attributes = [...node.attributes];
+    attributes.forEach(attribute=> {
+        let directive = attribute.name; // "v-model"
+        if (this.isModelDirective(directive)) {
+            this.bindModel(attribute, node);
+        }
+    });
+}
+```
+恩就是把属性一个个抽出来解析嘛,很简单阿,再看
+```
+Compiler.prototype.isModelDirective = function(directive) {
+    return ['v-model'].includes(directive);
+}
+Compiler.prototype.bindModel = function(attribute, node) {
+    let bindKey = attribute.value; // "name"
+    /* --- 双向绑定区域 --- */
+    // 当 input 值发生变化时，对应的 data 项的值也发生变化
+    node.oninput = (e) => {
+        this.vm.$data[bindKey] = e.target.value;
+    }
+    // 当对应的 data 项的值发生变化时， input 的值也发生变化
+    node.value = this.vm.$data[bindKey];
+
+    // 当对应的 data 项的数据再次发生变化时，需要再次渲染模板, 将旧数据替换成新数据
+    this.listenDataChange({
+        vm: this.vm,
+        key: bindKey,
+        callback: (newValue) => {
+            node.value = newValue;
+        }
+    });
+    /* --- 双向绑定区域 --- */
+}
+```
+关键的地方来了,我们判断完指令后,就要绑定 model,这里需要说明的是,一般我们绑定的数据都是输入的,所以这里的双向绑定是对于**表单元素**而言的,通过监听 input 事件,我们可以做到更新 data,然后通过 data,自然也可以更新表单里面的值,最后不要忘了,当对应的 data 项的数据再次发生变化时，需要再次渲染模板, 将旧数据替换成新数据
+
+## 增加个 v-on 指令
+简单,继续在 `parseNodeAttribute` 函数里面做判断嘛
+```
+Compiler.prototype.parseNodeAttribute = function(node) {
+    ...
+        if (this.isModelDirective(directive)) {
+            ...
+        } else if (this.isEventDirective(directive)) { // "v-on"
+            this.bindEventHandle(directive, attribute, node);
+        }
+    ...
+}
+Compiler.prototype.isEventDirective = function(directive) {
+    return directive.indexOf('v-on') === 0;
+}
+Compiler.prototype.bindEventHandle = function(directive, attribute, node) {
+    let eventType = directive.substr(5); // "click"
+    let methodsName = attribute.value;   // "clikcMe"
+    node.addEventListener(eventType, this.vm.$methods[methodsName].bind(this.vm));
+}
+```
+利用 `addEventListener` 这个 api 可以轻松做到,最后需要注意的是需要 `bind(this.vm)`
+
+然后就是在 Mvvm 这个对象的 `init` 方法里面添加 `methods` 属性,并且将 `$data` 中的数据直接代理到当前 vm 对象
+```
+Mvvm.prototype.init = function(options) {
+    let {el, data, methods} = options;
+    ...
+    this.$methods = methods || {};
+
+    // 当访问 vm.name 时相当于访问 vm.$data.name, 这里就需要用到 Object.defineProperty 数据劫持
+    // 当访问 vm.talk() 时相当于访问 vm.$methods.talk()
+    onInnerData(this);
+}
+```
+增加个监听 vm 的函数吧
+```
+function onInnerData(vm) {
+    // 遍历 data 属性
+    let data = vm.$data;
+    if (!data || typeof data !== 'object') { return; }
+    for (let key in data) {
+        Object.defineProperty(vm, key, {
+            enumerable: true,
+            configurable: true,
+            get: ()=> { return data[key]; },
+            set: (newValue)=> { data[key] = newValue; }
+        });
+    }
+
+    // 遍历 methods 属性
+    let methods = vm.$methods;
+    if (!methods || typeof methods !== 'object') { return; }
+    for (let key in methods) {
+        Object.defineProperty(vm, key, {
+            enumerable: true,
+            configurable: true,
+            get: ()=> { return methods[key].bind(vm); },
+            set: (newValue)=> {
+                console.log('set methods...');
+            }
+        });
+    }
+}
+```
+都是同样的逻辑,这样的话就可以用了,代码链接[在这儿](https://github.com/strugglebak/mvvm),预览链接[在这儿](https://strugglebak.github.io/mvvm/index)
+
+## 总结
+1. MVVM 是一种设计模式,用于分离 data 和 ui
+2. Model 就是 data,一般用来 save data
+3. View 是对 data 进行处理,比如渲染,比如格式化
+4. ViewModel 就是个"保姆", Model 变了通知 View, View 变了通知 Model
+
+## 参考链接
+[为何放弃MVC使用MVVM](https://www.jianshu.com/p/5bfdc5ba839a)
+
+[MVVM基础之双向绑定原理](http://www.que01.top/2016/05/03/two-way-bind/)
