@@ -59,7 +59,7 @@ mdn 上的解释大概就是
 - prop: 要定义或要修改的属性名
 - descriptor: 将要被定义或修改的属性描述符
 
-```
+```js
 var obj = {}
 obj.name = 'strugglebak'
 obj['age'] = 18
