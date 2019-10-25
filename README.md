@@ -30,7 +30,7 @@
 <div id="app">{{name}}</div>
 ```
 有一个 VM,它里面有个 Model,实现如下
-```javascript
+```js
 var vm = new Mvvm({
     el: '#app',
     data: {
@@ -69,7 +69,7 @@ Object.defineProperty(obj, 'intro', {
 console.log(obj)  // {name: 'strugglebak', age: 18, intro: 'hello world'}
 ```
 看!我修改了一个对象的属性!你可能会疑问,阿,这就结束了?没有,接下来才是见证奇迹的时刻
-```
+```js
 var obj = {}
 var age 
 Object.defineProperty(obj, 'age', {
@@ -95,7 +95,7 @@ console.log(obj.age) // 'get age...', 100
 
 ## 数据的劫持
 好,现在我们可以实现一个简单的数据劫持的函数了,其实就是监听数据的变化
-```
+```js
 function on(data) {
     if (!data || typeof data !== 'object') { return; }
     for (let key in data) {
@@ -119,7 +119,7 @@ function on(data) {
 }
 ```
 提示一下上面的 `let value` 为何不能用 `var value`,用了 `var` 之后 `value` 变量会提升到整个作用域范围,它里面就保存着一个变量的地址,等下个变量变化了它就存放的是下个变量的地址,所以当程序结束时它存放的就是最后一个变量的地址,这样就出 bug 了.然后数据怎么劫持的?
-```
+```js
 let data = {
     name: 'strugglebak'
 }
@@ -130,7 +130,7 @@ data.name = 'kabelggurts' // change value from 'strugglebak' to 'kabelggurts'
 
 ## 观察者模式
 接下来我们将实现一个最简单的观察者
-```
+```js
 // 观察者
 function Observer(options) {
     let {name} = options;
@@ -148,7 +148,7 @@ Observer.prototype.subscribe = function(subject) {
 这个观察者有两个函数,一个是更新 `update`,一个是订阅 `subscribe`
 
 然后我们再实现一个主题
-```
+```js
 // 主题
 function Subject(name='') {
     this.name = name;
@@ -173,7 +173,7 @@ Subject.prototype.emit = function() {
 这个主题有 3 个函数,它能够添加和删除观察者,当其中最重要的是,它能够通知 (`emit`) 其他所有的观察者执行它自己的 `update` 函数,所以这个主题里面必须要维护一个观察者的数组
 
 使用如下
-```
+```js
 let subject = new Subject('subject')
 let observer = new Observer('observer')
 observer.update = function() {
@@ -186,7 +186,7 @@ subject.emit() // 主题更新
 ## 单向绑定
 有了以上的知识点,我们现在就可以实现一个简单的单向数据流的框架了.那么什么是单向数据流,就是说我们修改这个 model 的 `name` 属性时,模板相应的会发生变化
 所以我们就需要一个 `Mvvm` 的对象
-```
+```js
 function Mvvm(options) {
     this.init(options);
     on(this.$data); // 监听数据变化
@@ -199,7 +199,7 @@ Mvvm.prototype.init = function(options) {
 }
 ```
 还是按照我们之前的思路来的不是嘛,接下来就要实现解析模板的对象了,它大概有如下几种方法
-```
+```js
 function Compiler(vm) {
     this.vm = vm;
     this.node = this.vm.$el;
@@ -209,7 +209,7 @@ Compiler.prototype.compile = function() {
 }
 ```
 先从简单的开始吧,首先它拿到一个 vm, 然后开始解析,这挺好理解,我们再尝试者解决一下 `parse` 这个函数
-```
+```js
 Compiler.prototype.parse = function(node) {
     if (node.nodeType === Node.ELEMENT_NODE) { // 这个 node 是个元素节点
         node.childNodes.forEach(childNode => {
@@ -221,7 +221,7 @@ Compiler.prototype.parse = function(node) {
 }
 ```
 以上的代码也挺好理解(这里只做一些简单的判断避免代码变得复杂),我们的目的是要找出那个文本节点,因为我们知道 DOM 是个树结构,那么自然而然我们这里可以想到递归来寻找,无非就是没有找到就递归,找到了就渲染,好,现在看看它是怎么渲染这个文本节点的
-```
+```js
 Compiler.prototype.render2Text = function(node) {
     let regex = /{{(.+?)}}/g; // 正则，匹配 {{}} 字符串
     let match;
@@ -235,7 +235,7 @@ Compiler.prototype.render2Text = function(node) {
 用正则将 text 文本中的 `{{name}}` 替换成 `data` 中的属性 `name` 对应的值,这样一来,基本上一刷新就能渲染上去
 
 但是这样还不够,因为下次数据变化了就没有刷新了,所以我们需要在这个函数里面再添加一个监听函数
-```
+```js
 ...
 node.nodeValue = node.nodeValue.replace(value, this.vm.$data[key]);
 
@@ -250,14 +250,14 @@ this.listenDataChange({
 ...
 ```
 这个监听函数是这样实现的
-```
+```js
 Compiler.prototype.listenDataChange = function(options) {
     // 为每个变化的数据添加 observer
     new Observer(options);
 }
 ```
 由于传了回调,我们就要修改 Observer 观察者了
-```
+```js
 function Observer(options) {
     let {name, vm, key, callback} = options;
     this.subjects = {};
@@ -280,7 +280,7 @@ Observer.prototype.update = function() {
 这个时候问题就来了,现在我们为每个可能变化的数据都绑定了一个观察者,现在我们唯一没有做的事情就是这么多观察者,什么时候该订阅主题呢?我们知道是需要在 `on` 这个监听数据变化的函数里面订阅,可是问题来了,谁来订阅?难道你需要每个观察者都过来订阅嘛?显然不是,因为这样就有一堆观察者绑定了一堆主题,请注意我们这里的**一对多关系**,只有变化的主题(`this.data.name`)我们才去订阅它.我们这个时候想到,要是哪个数据有变化,这个时候绑定这个数据的观察者就站出来,也就是说目前**绑定的这个观察者的优先级最高**,它能优先更新这个数据就好了,那么怎么做呢?
 
 于是我们想到可不可以用一个全局的 `globleObserver` 来做呢?首先我们假定这个全局的,优先级最高的观察者为 null, 当它不为 null 时,就可以订阅了,那么在哪里订阅?当然是在 `get` 函数中
-```
+```js
 var globleObserver = null;
 function on(data) {
     ...
@@ -299,7 +299,7 @@ function on(data) {
 }
 ```
 然后在观察者里添加个 `getValue` 函数
-```
+```js
 Observer.prototype.getValue = function() {
     globleObserver = this; // 下面的语句在执行时会触发 getter, 
                            // 在 getter return 之前将监听数据的 observer 添加进 subject 数据里面
@@ -310,7 +310,7 @@ Observer.prototype.getValue = function() {
 }
 ```
 最后修改一下 Observer 对象
-```
+```js
 function Observer(options) {
     let {name, vm, key, callback} = options;
     this.subjects = {};
@@ -327,7 +327,7 @@ function Observer(options) {
 上面的是实现了单向的绑定,可是一个 MVVM 是要双向的阿,那么怎么实现呢?这里我们就要学习 Vue 的方法了,也许你已经猜到了,对,就是**指令**,我们先定义一个 `v-model` 指令吧, `v-model="name"` 就表示绑定的是一个变量,这个变量的名字就是 name
 
 我们需要修改 Compiler 的 parse 函数
-```
+```js
 Compiler.prototype.parse = function(node) {
     if (node.nodeType === Node.ELEMENT_NODE) {
         this.parseNodeAttribute(node); // 解析指令,属性
@@ -340,7 +340,7 @@ Compiler.prototype.parse = function(node) {
 }
 ```
 多了个 `parseNodeAttribute`,我们看看它实现了什么
-```
+```js
 Compiler.prototype.parseNodeAttribute = function(node) {
     let attributes = [...node.attributes];
     attributes.forEach(attribute=> {
@@ -352,7 +352,7 @@ Compiler.prototype.parseNodeAttribute = function(node) {
 }
 ```
 恩就是把属性一个个抽出来解析嘛,很简单阿,再看
-```
+```js
 Compiler.prototype.isModelDirective = function(directive) {
     return ['v-model'].includes(directive);
 }
@@ -381,7 +381,7 @@ Compiler.prototype.bindModel = function(attribute, node) {
 
 ## 增加个 v-on 指令
 简单,继续在 `parseNodeAttribute` 函数里面做判断嘛
-```
+```js
 Compiler.prototype.parseNodeAttribute = function(node) {
     ...
         if (this.isModelDirective(directive)) {
@@ -403,7 +403,7 @@ Compiler.prototype.bindEventHandle = function(directive, attribute, node) {
 利用 `addEventListener` 这个 api 可以轻松做到,最后需要注意的是需要 `bind(this.vm)`
 
 然后就是在 Mvvm 这个对象的 `init` 方法里面添加 `methods` 属性,并且将 `$data` 中的数据直接代理到当前 vm 对象
-```
+```js
 Mvvm.prototype.init = function(options) {
     let {el, data, methods} = options;
     ...
@@ -415,7 +415,7 @@ Mvvm.prototype.init = function(options) {
 }
 ```
 增加个监听 vm 的函数吧
-```
+```js
 function onInnerData(vm) {
     // 遍历 data 属性
     let data = vm.$data;
